@@ -1,15 +1,25 @@
 import React, { useEffect } from 'react';
 import { format, addMinutes, startOfDay, addDays, isToday, differenceInMinutes } from 'date-fns';
 import { Event } from '../types/Event';
+import { CalendarEventCard } from './CalendarEventCard';
 
 interface DayViewProps {
     date: Date;
     events: Event[];
     onTimeSlotClick: (date: Date) => void;
     onDateChange: (date: Date) => void;
+    onEventUpdate?: (event: Event) => void;
+    onEventDelete?: (event: Event) => void;
 }
 
-export const DayView: React.FC<DayViewProps> = ({ date, events, onTimeSlotClick, onDateChange }) => {
+export const DayView: React.FC<DayViewProps> = ({
+    date,
+    events,
+    onTimeSlotClick,
+    onDateChange,
+    onEventUpdate,
+    onEventDelete
+}) => {
     const timeSlots = Array.from({ length: 96 }, (_, i) => {
         const slotDate = addMinutes(startOfDay(date), i * 15);
         return {
@@ -127,25 +137,17 @@ export const DayView: React.FC<DayViewProps> = ({ date, events, onTimeSlotClick,
                             {events.map(event => (
                                 <div
                                     key={event.id}
-                                    className="absolute left-1 right-1 rounded text-xs overflow-hidden shadow-sm"
+                                    className="absolute left-1 right-1"
                                     style={{
-                                        backgroundColor: `var(--tokyo-bg)`,
-                                        borderLeft: `2px solid ${event.color}`,
-                                        height: `${calculateEventHeight(event)}px`,
+                                        top: 0,
                                         zIndex: 10
                                     }}
                                 >
-                                    <div className="p-1" style={{ backgroundColor: `${event.color}10` }}>
-                                        <div className="font-medium text-[var(--tokyo-cyan)]">{event.title}</div>
-                                        <div className="text-[10px] text-[var(--tokyo-fg)]/80">
-                                            {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
-                                        </div>
-                                        {event.description && (
-                                            <div className="text-[10px] text-[var(--tokyo-fg)]/60 mt-0.5">
-                                                {event.description}
-                                            </div>
-                                        )}
-                                    </div>
+                                    <CalendarEventCard
+                                        event={event}
+                                        onUpdate={onEventUpdate}
+                                        onDelete={onEventDelete}
+                                    />
                                 </div>
                             ))}
                         </div>

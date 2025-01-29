@@ -16,12 +16,15 @@ import {
     differenceInMinutes
 } from 'date-fns';
 import { Event } from '../types/Event';
+import { CalendarEventCard } from './CalendarEventCard';
 
 interface MultiDayViewProps {
     date: Date;
     events: Event[];
     onTimeSlotClick: (date: Date) => void;
     onDateChange: (date: Date) => void;
+    onEventUpdate?: (event: Event) => void;
+    onEventDelete?: (event: Event) => void;
     numberOfDays?: 3 | 7;
 }
 
@@ -30,6 +33,8 @@ export const MultiDayView: React.FC<MultiDayViewProps> = ({
     events,
     onTimeSlotClick,
     onDateChange,
+    onEventUpdate,
+    onEventDelete,
     numberOfDays = 7
 }) => {
     const startDate = numberOfDays === 7 ? startOfWeek(date) : date;
@@ -172,25 +177,17 @@ export const MultiDayView: React.FC<MultiDayViewProps> = ({
                                     {eventsInSlot.map(event => (
                                         <div
                                             key={event.id}
-                                            className="absolute left-1 right-1 rounded text-xs overflow-hidden shadow-sm"
+                                            className="absolute left-1 right-1"
                                             style={{
-                                                backgroundColor: `var(--tokyo-bg)`,
-                                                borderLeft: `2px solid ${event.color}`,
-                                                height: `${calculateEventHeight(event)}px`,
+                                                top: 0,
                                                 zIndex: 10
                                             }}
                                         >
-                                            <div className="p-1" style={{ backgroundColor: `${event.color}10` }}>
-                                                <div className="font-medium text-[var(--tokyo-cyan)]">{event.title}</div>
-                                                <div className="text-[10px] text-[var(--tokyo-fg)]/80">
-                                                    {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
-                                                </div>
-                                                {event.description && (
-                                                    <div className="text-[10px] text-[var(--tokyo-fg)]/60 mt-0.5">
-                                                        {event.description}
-                                                    </div>
-                                                )}
-                                            </div>
+                                            <CalendarEventCard
+                                                event={event}
+                                                onUpdate={onEventUpdate}
+                                                onDelete={onEventDelete}
+                                            />
                                         </div>
                                     ))}
                                 </div>

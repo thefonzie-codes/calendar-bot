@@ -1,60 +1,74 @@
 # Calendar App
 
-A sleek, modern calendar application built with Next.js and TypeScript, featuring a beautiful Tokyo Night-inspired theme.
+A sleek calendar application with a modern Tokyo-night inspired theme. Built with Next.js, Go, and SQLite.
 
 ## Features
 
-- 📅 Multiple calendar views:
-  - Month view
-  - Week view
-  - 3-day view
-  - Day view
-- 🎨 Dark/Light theme toggle with Tokyo Night-inspired colors
-- ✨ Smooth animations and transitions
-- 🔒 Confirmation dialogs for important actions
-- 📱 Responsive design for all screen sizes
-- ⌨️ Keyboard-friendly time input handling
-- 🎯 Click-outside behavior for modals
-
-## Recent Improvements
-
-- Enhanced UI with subtle borders and improved visual hierarchy
-- Added confirmation dialog for event deletion
-- Improved time input handling with backspace support
-- Click-outside functionality for modals and dialogs
-- Refined dark mode appearance with adjusted border opacity
+- 📅 Multiple calendar views (Month, Week, 3-Day, Day)
+- 🎨 Beautiful Tokyo-night theme with dark mode
+- ⚡ Real-time event management
+- 🔄 Persistent storage with SQLite database
+- 🎯 Intuitive event creation and editing
+- ⌨️ Keyboard shortcuts for navigation
 
 ## Getting Started
 
-First, install the dependencies:
+### Prerequisites
 
+- Node.js (v18 or higher)
+- Go (v1.19 or higher)
+- SQLite3
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/your-username/calendar-app.git
+cd calendar-app
+```
+
+2. Install frontend dependencies:
 ```bash
 npm install
-# or
-yarn install
 ```
 
-Then, run the development server:
-
+3. Start the frontend development server:
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. In a new terminal, start the backend server:
+```bash
+cd backend
+go run cmd/server/main.go
+```
 
-## Tech Stack
+The app will be available at `http://localhost:3000`
 
-- Next.js 14
-- TypeScript
-- Tailwind CSS
-- date-fns for date manipulation
+## Keyboard Shortcuts
 
-## Contributing
+- `←` / `→`: Navigate between days
+- `T`: Jump to today
+- `Esc`: Close modals
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+## TODO
+
+### AI Chat Integration Plans
+1. [ ] Design and implement chat interface
+2. [ ] Set up OpenAI API integration
+3. [ ] Create natural language processing for schedule modifications
+4. [ ] Add AI suggestions for event scheduling
+5. [ ] Implement schedule optimization features
+6. [ ] Add voice command support for hands-free scheduling
+
+### General Improvements
+1. [ ] Add recurring events support
+2. [ ] Implement event categories/tags
+3. [ ] Add event reminders/notifications
+4. [ ] Enable calendar sharing
+5. [ ] Add multi-user support
+6. [ ] Implement drag-and-drop event editing
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+MIT License - feel free to use this project however you'd like, boss! 😎

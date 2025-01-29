@@ -6,7 +6,7 @@ import { DayView } from './components/DayView';
 import { MultiDayView } from './components/MultiDayView';
 import { EventCard } from './components/EventCard';
 import { Event } from './types/Event';
-import { loadEvents, saveEvent, deleteEvent } from './utils/eventUtils';
+import { api } from './utils/api';
 import { ThemeToggle } from './components/ThemeToggle';
 import { EventDrawer } from './components/EventDrawer';
 import { format } from 'date-fns';
@@ -24,10 +24,23 @@ export default function Home() {
     color: 'var(--tokyo-blue)'
   });
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [view, setView] = useState<'day' | 'week'>('week');
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchEvents = async () => {
+    try {
+      setIsLoading(true);
+      const fetchedEvents = await api.getEvents();
+      setEvents(fetchedEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const initialEvents = loadEvents();
-    setEvents(initialEvents);
+    fetchEvents();
   }, []);
 
   const handleDateSelect = (date: Date) => {
@@ -50,8 +63,7 @@ export default function Home() {
   const handleAddEvent = async () => {
     if (!selectedDate || !newEvent.title) return;
 
-    const event: Event = {
-      id: Math.random().toString(36).substr(2, 9),
+    const eventToCreate = {
       title: newEvent.title,
       description: newEvent.description || '',
       start: newEvent.start || selectedDate,
@@ -60,8 +72,8 @@ export default function Home() {
     };
 
     try {
-      await saveEvent(event);
-      setEvents(prev => [...prev, event]);
+      const createdEvent = await api.createEvent(eventToCreate);
+      setEvents(prev => [...prev, createdEvent]);
       setIsAddingEvent(false);
       setNewEvent({
         title: '',
@@ -69,14 +81,14 @@ export default function Home() {
         color: 'var(--tokyo-blue)'
       });
     } catch (error) {
-      console.error('Error saving event:', error);
+      console.error('Error creating event:', error);
     }
   };
 
-  const handleDeleteEvent = async (event: Event) => {
+  const handleDeleteEvent = async (eventToDelete: Event) => {
     try {
-      await deleteEvent(event.id);
-      setEvents(prev => prev.filter(e => e.id !== event.id));
+      await api.deleteEvent(eventToDelete.id);
+      await fetchEvents();
     } catch (error) {
       console.error('Error deleting event:', error);
     }
@@ -84,6 +96,15 @@ export default function Home() {
 
   const handleDateChange = (newDate: Date) => {
     setSelectedDate(newDate);
+  };
+
+  const handleUpdateEvent = async (updatedEvent: Event) => {
+    try {
+      await api.updateEvent(updatedEvent);
+      await fetchEvents();
+    } catch (error) {
+      console.error('Error updating event:', error);
+    }
   };
 
   return (
@@ -146,18 +167,21 @@ export default function Home() {
               />
             ) : currentView === 'day' ? (
               <DayView
-                date={selectedDate || new Date()}
+                date={selectedDate}
                 events={events}
                 onTimeSlotClick={handleTimeSlotClick}
-                onDateChange={handleDateChange}
+                onDateChange={setSelectedDate}
+                onEventUpdate={handleUpdateEvent}
+                onEventDelete={handleDeleteEvent}
               />
             ) : (
               <MultiDayView
-                date={selectedDate || new Date()}
+                date={selectedDate}
                 events={events}
                 onTimeSlotClick={handleTimeSlotClick}
-                onDateChange={handleDateChange}
-                numberOfDays={currentView === 'week' ? 7 : 3}
+                onDateChange={setSelectedDate}
+                onEventUpdate={handleUpdateEvent}
+                onEventDelete={handleDeleteEvent}
               />
             )}
           </div>
@@ -189,6 +213,7 @@ export default function Home() {
                     event={event}
                     onClick={(event) => console.log('Event clicked:', event)}
                     onDelete={handleDeleteEvent}
+                    onUpdate={handleUpdateEvent}
                   />
                 ))}
             </div>
