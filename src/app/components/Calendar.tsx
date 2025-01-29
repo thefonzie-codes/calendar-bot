@@ -5,9 +5,10 @@ import { Event } from '../types/Event';
 interface CalendarProps {
     onDateSelect?: (date: Date) => void;
     events: Event[];
+    selectedDate?: Date;
 }
 
-export const Calendar: React.FC<CalendarProps> = ({ onDateSelect, events }) => {
+export const Calendar: React.FC<CalendarProps> = ({ onDateSelect, events, selectedDate }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
 
     const monthStart = startOfMonth(currentDate);
@@ -36,7 +37,7 @@ export const Calendar: React.FC<CalendarProps> = ({ onDateSelect, events }) => {
 
     return (
         <div className="w-full max-w-3xl mx-auto rounded-lg bg-[var(--tokyo-bg-lighter)] shadow-xl">
-            <div className="flex justify-between items-center p-2 border-b border-[var(--tokyo-fg)]/10">
+            <div className="flex justify-between items-center p-2 border-b border-[var(--tokyo-border)]">
                 <button
                     onClick={() => navigateMonth('prev')}
                     className="p-1 text-[var(--tokyo-purple)] hover:bg-[var(--tokyo-purple)]/10 rounded-full transition-colors"
@@ -72,16 +73,16 @@ export const Calendar: React.FC<CalendarProps> = ({ onDateSelect, events }) => {
                             key={date.toISOString()}
                             onClick={() => handleDateClick(date)}
                             className={`
-                                relative min-h-[80px] p-1 border-[0.5px] border-[var(--tokyo-fg)]/10
+                                relative min-h-[80px] p-1 border-[0.5px] border-[var(--tokyo-border)]
                                 cursor-pointer transition-colors
-                                ${isToday(date) ? 'bg-[var(--tokyo-blue)]/10' : ''}
+                                ${date.toDateString() === selectedDate?.toDateString() ? 'bg-[var(--tokyo-blue)]/10' : ''}
                                 ${!isSameMonth(date, currentDate) ? 'text-[var(--tokyo-fg)]/40' : ''}
                                 hover:bg-[var(--tokyo-purple)]/5
                             `}
                         >
                             <span className={`
                                 inline-flex w-5 h-5 items-center justify-center rounded-full text-xs
-                                ${isToday(date) ? 'bg-[var(--tokyo-blue)] text-white' : ''}
+                                ${date.toDateString() === selectedDate?.toDateString() ? 'bg-[var(--tokyo-blue)] text-white' : ''}
                             `}>
                                 {format(date, 'd')}
                             </span>

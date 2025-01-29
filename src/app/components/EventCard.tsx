@@ -11,14 +11,35 @@ interface EventCardProps {
 export const EventCard: React.FC<EventCardProps> = ({ event, onClick, onDelete }) => {
   const { title, description, start, end, color = 'var(--tokyo-blue)' } = event;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    setIsExpanded(!isExpanded);
+    onClick?.(event);
+  };
 
   return (
     <div
-      onClick={() => onClick?.(event)}
-      className="group relative p-3 rounded-lg mb-2 cursor-pointer transition-all
-                bg-[var(--tokyo-bg-lighter)] hover:bg-[var(--tokyo-bg-lighter)]/80"
+      onClick={handleClick}
+      className="group relative p-2 rounded mb-2 cursor-pointer transition-all
+                bg-[var(--tokyo-bg)] hover:bg-[var(--tokyo-bg)]/80 border border-[var(--tokyo-border)]"
       style={{ borderLeft: `4px solid ${color}` }}
     >
+      <div className="flex items-center gap-2 pr-8">
+        <span className="text-xs text-[var(--tokyo-purple)]">
+          {format(start, 'h:mm a')}
+        </span>
+        <h3 className="font-medium text-[var(--tokyo-cyan)] flex-1 truncate">{title}</h3>
+        <svg
+          className={`w-4 h-4 text-[var(--tokyo-purple)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={(e) => {
@@ -34,13 +55,16 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick, onDelete }
         </button>
       </div>
 
-      <h3 className="font-semibold text-[var(--tokyo-cyan)]">{title}</h3>
-      {description && (
-        <p className="text-sm text-[var(--tokyo-fg)]/80 mt-1">{description}</p>
+      {isExpanded && (
+        <div className="mt-2 pt-2 border-t border-[var(--tokyo-border)]" onClick={e => e.stopPropagation()}>
+          <div className="text-xs text-[var(--tokyo-purple)]">
+            {format(start, 'h:mm a')} - {format(end, 'h:mm a')}
+          </div>
+          {description && (
+            <p className="mt-1 text-sm text-[var(--tokyo-fg)]/80">{description}</p>
+          )}
+        </div>
       )}
-      <div className="text-xs text-[var(--tokyo-purple)] mt-2">
-        {format(start, 'h:mm a')} - {format(end, 'h:mm a')}
-      </div>
 
       {/* Delete Confirmation */}
       {showDeleteConfirm && (

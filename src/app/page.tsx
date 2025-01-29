@@ -14,7 +14,7 @@ import { format } from 'date-fns';
 type ViewType = 'month' | 'week' | '3day' | 'day';
 
 export default function Home() {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [events, setEvents] = useState<Event[]>([]);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('month');
@@ -142,6 +142,7 @@ export default function Home() {
               <Calendar
                 onDateSelect={handleDateSelect}
                 events={events}
+                selectedDate={selectedDate}
               />
             ) : currentView === 'day' ? (
               <DayView
@@ -164,16 +165,12 @@ export default function Home() {
           <div className="bg-[var(--tokyo-bg-lighter)] p-6 rounded-lg shadow-xl">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-[var(--tokyo-cyan)]">
-                {selectedDate ? (
-                  `Events for ${selectedDate.toLocaleDateString()}`
-                ) : (
-                  'Select a date'
-                )}
+                {format(selectedDate, 'MMMM d, yyyy')}
               </h2>
               {selectedDate && !isAddingEvent && (
                 <button
                   onClick={() => setIsAddingEvent(true)}
-                  className="px-4 py-2 bg-[var(--tokyo-green)] text-[var(--tokyo-bg)] rounded hover:bg-[var(--tokyo-green)]/90 transition-colors"
+                  className="px-4 py-2 text-[var(--tokyo-purple)] border border-[var(--tokyo-border)] rounded hover:bg-[var(--tokyo-purple)] hover:text-[var(--tokyo-bg)] transition-colors"
                 >
                   Add Event
                 </button>
