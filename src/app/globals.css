@@ -3,8 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Dark theme (default) */
+  --tokyo-bg: #1a1b26;
+  --tokyo-bg-lighter: #24283b;
+  --tokyo-fg: #a9b1d6;
+  --tokyo-purple: #bb9af7;
+  --tokyo-blue: #7aa2f7;
+  --tokyo-cyan: #7dcfff;
+  --tokyo-green: #9ece6a;
+  --tokyo-red: #f7768e;
+  --tokyo-border: rgba(187, 154, 247, 0.12); /* New subtle border color for dark mode */
+}
+
+:root[data-theme="light"] {
+  --tokyo-bg: #f0f1f5;
+  --tokyo-bg-lighter: #ffffff;
+  --tokyo-fg: #343b58;
+  --tokyo-purple: #9d4edd;
+  --tokyo-blue: #3b82f6;
+  --tokyo-cyan: #06b6d4;
+  --tokyo-green: #22c55e;
+  --tokyo-red: #ef4444;
+  --tokyo-border: rgba(157, 78, 221, 0.2); /* Slightly more visible border for light mode */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -15,7 +35,7 @@
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  background-color: var(--tokyo-bg);
+  color: var(--tokyo-fg);
   font-family: Arial, Helvetica, sans-serif;
 }
