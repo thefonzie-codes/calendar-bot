@@ -55,7 +55,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, events, onEvents
             setMessages(prev => [...prev, aiMessage]);
 
             if (response.success) {
-                onEventsChange(); // Refresh events if calendar was modified
+                onEventsChange();
             }
         } catch (error) {
             const errorMessage: Message = {

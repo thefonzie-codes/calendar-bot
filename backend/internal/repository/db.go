@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"log"
-
 	"calendar-backend/internal/models"
 
 	"gorm.io/driver/sqlite"
@@ -11,16 +9,17 @@ import (
 
 var DB *gorm.DB
 
-func InitDB() {
+func InitDB() error {
 	var err error
 	DB, err = gorm.Open(sqlite.Open("calendar.db"), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		return err
 	}
 
 	// Auto migrate the schema
 	err = DB.AutoMigrate(&models.Event{})
 	if err != nil {
-		log.Fatal("Failed to migrate database:", err)
+		return err
 	}
-} 
+	return nil
+}
