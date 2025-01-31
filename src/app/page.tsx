@@ -10,6 +10,8 @@ import { api } from './utils/api';
 import { ThemeToggle } from './components/ThemeToggle';
 import { EventDrawer } from './components/EventDrawer';
 import { format } from 'date-fns';
+import { ChatButton } from './components/ChatButton';
+import { ChatWidget } from './components/ChatWidget';
 
 type ViewType = 'month' | 'week' | '3day' | 'day';
 
@@ -26,6 +28,7 @@ export default function Home() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [view, setView] = useState<'day' | 'week'>('week');
   const [isLoading, setIsLoading] = useState(true);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const fetchEvents = async () => {
     try {
@@ -393,6 +396,13 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <ChatButton onClick={() => setIsChatOpen(!isChatOpen)} isOpen={isChatOpen} />
+      <ChatWidget
+        isOpen={isChatOpen}
+        events={events}
+        onEventsChange={fetchEvents}
+      />
     </main>
   );
 }
