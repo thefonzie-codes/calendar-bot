@@ -3,6 +3,7 @@ package repository
 import (
 	"calendar-backend/internal/models"
 	"fmt"
+	"log"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -13,7 +14,7 @@ var DB *gorm.DB
 
 func InitDB() error {
 	var err error
-	fmt.Println("Initializing database...")
+	log.Println("Initializing database...")
 
 	// Enable GORM logging for debugging
 	config := &gorm.Config{
@@ -31,7 +32,7 @@ func InitDB() error {
 	}
 
 	// Auto migrate the schema
-	fmt.Println("Migrating database schema...")
+	log.Println("Migrating database schema...")
 	if err := DB.AutoMigrate(&models.Event{}); err != nil {
 		return fmt.Errorf("failed to migrate database: %v", err)
 	}
@@ -41,7 +42,7 @@ func InitDB() error {
 	if err := DB.Model(&models.Event{}).Count(&count).Error; err != nil {
 		return fmt.Errorf("failed to query database: %v", err)
 	}
-	fmt.Printf("Database initialized successfully. Current event count: %d\n", count)
+	log.Printf("Database initialized successfully. Current event count: %d\n", count)
 
 	return nil
 }

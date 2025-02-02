@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -29,7 +30,7 @@ type OllamaStreamResponse struct {
 }
 
 type CalendarAction struct {
-	Type        string    `json:"type"` // "create", "update", or "delete"
+	Type        string    `json:"type"` // "response", "create", "update", or "delete"
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	Start       time.Time `json:"start"`
@@ -45,18 +46,36 @@ type AIResponse struct {
 const systemPrompt = `You are a helpful calendar assistant. You can help users manage their schedule, 
 create events, and provide suggestions about time management. Please provide concise and practical responses.
 
+Once you create the events, ask the user if it is correct. If it is not, ask the user for the changes they would like to make.
+
+IMPORTANT: The current date is {{.CurrentDate}} and the user's time zone is {{.TimeZone}}. The user will give their event times in their local time zone.  
+Convert these times to UTC and respond with the UTC times. For example, if the user says "I have a meeting at 2 PM" and their time zone is EST, 
+convert that to UTC by adding 5 hours (since EST is UTC-5). So the UTC time would be 7:00 PM.  Therefore the start time would be 2025-01-02T19:00:00Z and the end time would be 2025-01-02T20:00:00Z.
+
 IMPORTANT: You MUST respond with a valid JSON object containing a "message" field and optionally an "action" field.
 DO NOT include any thinking process or markdown outside the JSON.
 
-Example response format:
+IMPORTANT: All events must be in the future.
+
+Example response formats:
+
+For simple responses (no calendar action):
+{
+    "message": "Your next meeting is at 2 PM today!",
+    "action": {
+        "type": "response"
+    }
+}
+
+For calendar modifications:
 {
     "message": "I've added your ballet class to the calendar! The time slot from 2 PM to 3 PM is free.",
     "action": {
         "type": "create",
         "title": "Ballet Class",
         "description": "Weekly dance session",
-        "start": "2024-01-31T14:00:00Z",
-        "end": "2024-01-31T15:00:00Z"
+        "start": "2025-01-31T14:00:00Z",
+        "end": "2025-01-31T15:00:00Z"
     }
 }
 
@@ -105,61 +124,64 @@ func GetFormattedSchedule() (string, error) {
 }
 
 func executeCalendarAction(action *CalendarAction) error {
-	fmt.Printf("Executing calendar action: %+v\n", action)
+	log.Printf("Executing calendar action: %+v\n", action)
 
 	switch action.Type {
+	case "response":
+		// Do nothing, just return the message
+		return nil
 	case "create":
 		event := models.Event{
 			ID:          uuid.New().String(),
 			Title:       action.Title,
 			Description: action.Description,
-			Start:       action.Start,
-			End:         action.End,
+			Start:       action.Start.UTC(),
+			End:         action.End.UTC(),
 			Color:       "var(--tokyo-purple)", // Add default color
 		}
-		fmt.Printf("Creating event: %+v\n", event)
+		log.Printf("Creating event: %+v\n", event)
 		if err := repository.DB.Create(&event).Error; err != nil {
-			fmt.Printf("Error creating event: %v\n", err)
+			log.Printf("Error creating event: %v\n", err)
 			return err
 		}
-		fmt.Printf("Successfully created event with ID: %s\n", event.ID)
+		log.Printf("Successfully created event with ID: %s\n", event.ID)
 		return nil
 
 	case "update":
-		fmt.Printf("Updating event with ID: %s\n", action.EventID)
+		log.Printf("Updating event with ID: %s\n", action.EventID)
 		result := repository.DB.Model(&models.Event{}).
 			Where("id = ?", action.EventID).
 			Updates(map[string]interface{}{
 				"title":       action.Title,
 				"description": action.Description,
-				"start":       action.Start,
-				"end":         action.End,
+				"start":       action.Start.UTC(),
+				"end":         action.End.UTC(),
 			})
 		if result.Error != nil {
-			fmt.Printf("Error updating event: %v\n", result.Error)
+			log.Printf("Error updating event: %v\n", result.Error)
 			return result.Error
 		}
-		fmt.Printf("Successfully updated event. Rows affected: %d\n", result.RowsAffected)
+		log.Printf("Successfully updated event. Rows affected: %d\n", result.RowsAffected)
 		return nil
 
 	case "delete":
-		fmt.Printf("Deleting event with ID: %s\n", action.EventID)
+		log.Printf("Deleting event with ID: %s\n", action.EventID)
 		result := repository.DB.Delete(&models.Event{}, "id = ?", action.EventID)
 		if result.Error != nil {
-			fmt.Printf("Error deleting event: %v\n", result.Error)
+			log.Printf("Error deleting event: %v\n", result.Error)
 			return result.Error
 		}
-		fmt.Printf("Successfully deleted event. Rows affected: %d\n", result.RowsAffected)
+		log.Printf("Successfully deleted event. Rows affected: %d\n", result.RowsAffected)
 		return nil
 
 	default:
 		err := fmt.Errorf("unknown action type: %s", action.Type)
-		fmt.Printf("Error: %v\n", err)
+		log.Printf("Error: %v\n", err)
 		return err
 	}
 }
 
-func QueryOllama(prompt string) (string, *CalendarAction, error) {
+func QueryOllama(prompt string, timezone string) (string, *CalendarAction, error) {
 	url := "http://127.0.0.1:11434/api/generate"
 
 	schedule, err := GetFormattedSchedule()
@@ -168,6 +190,8 @@ func QueryOllama(prompt string) (string, *CalendarAction, error) {
 	}
 
 	currentSystemPrompt := strings.Replace(systemPrompt, "{{.Schedule}}", schedule, 1)
+	currentSystemPrompt = strings.Replace(currentSystemPrompt, "{{.CurrentDate}}", time.Now().Format("2006-01-02"), 1)
+	currentSystemPrompt = strings.Replace(currentSystemPrompt, "{{.TimeZone}}", timezone, 1)
 
 	request := OllamaRequest{
 		Model:  "deepseek-r1:8b",
@@ -199,7 +223,7 @@ func QueryOllama(prompt string) (string, *CalendarAction, error) {
 		}
 
 		if streamResp.Done {
-			fmt.Printf("Full response received: %s\n", fullResponse.String())
+			log.Printf("Full response received: %s\n", fullResponse.String())
 
 			// Clean up the response to extract JSON
 			response := fullResponse.String()
@@ -216,8 +240,8 @@ func QueryOllama(prompt string) (string, *CalendarAction, error) {
 
 			// Try to parse the cleaned response
 			if err := json.Unmarshal([]byte(response), &aiResponse); err != nil {
-				fmt.Printf("Failed to parse JSON response: %v\n", err)
-				fmt.Printf("Attempted to parse: %s\n", response)
+				log.Printf("Failed to parse JSON response: %v\n", err)
+				log.Printf("Attempted to parse: %s\n", response)
 
 				// If parsing fails, create a simple message response
 				aiResponse = AIResponse{
@@ -233,16 +257,16 @@ func QueryOllama(prompt string) (string, *CalendarAction, error) {
 		return "", nil, fmt.Errorf("error reading response: %v", err)
 	}
 
-	fmt.Printf("Parsed AI Response: %+v\n", aiResponse)
+	log.Printf("Parsed AI Response: %+v\n", aiResponse)
 
 	// Execute calendar action if present
 	if aiResponse.Action != nil {
-		fmt.Printf("Executing calendar action from AI response\n")
+		log.Printf("Executing calendar action from AI response\n")
 		if err := executeCalendarAction(aiResponse.Action); err != nil {
 			return "", nil, fmt.Errorf("failed to execute calendar action: %v", err)
 		}
 	} else {
-		fmt.Printf("No calendar action in AI response\n")
+		log.Printf("No calendar action in AI response\n")
 	}
 
 	return aiResponse.Message, aiResponse.Action, nil

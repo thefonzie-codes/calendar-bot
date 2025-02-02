@@ -8,7 +8,6 @@ import { EventCard } from './components/EventCard';
 import { Event } from './types/Event';
 import { api } from './utils/api';
 import { ThemeToggle } from './components/ThemeToggle';
-import { EventDrawer } from './components/EventDrawer';
 import { format } from 'date-fns';
 import { ChatButton } from './components/ChatButton';
 import { ChatWidget } from './components/ChatWidget';
@@ -75,8 +74,8 @@ export default function Home() {
     };
 
     try {
-      const createdEvent = await api.createEvent(eventToCreate);
-      setEvents(prev => [...prev, createdEvent]);
+      await api.createEvent(eventToCreate);
+      await fetchEvents();
       setIsAddingEvent(false);
       setNewEvent({
         title: '',

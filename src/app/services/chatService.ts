@@ -8,7 +8,7 @@ interface ChatResponse {
 }
 
 interface CalendarAction {
-    type: 'create' | 'update' | 'delete';
+    type: 'response' | 'create' | 'update' | 'delete';
     title?: string;
     description?: string;
     start?: string;
@@ -21,6 +21,16 @@ interface AIResponse {
     action?: CalendarAction;
 }
 
+// Helper function to map backend action types to frontend types
+function mapActionType(type: 'response' | 'create' | 'update' | 'delete'): 'add' | 'edit' | 'delete' | undefined {
+    switch (type) {
+        case 'response': return undefined;
+        case 'create': return 'add';
+        case 'update': return 'edit';
+        case 'delete': return 'delete';
+    }
+}
+
 export class ChatService {
     static async processMessage(message: string, events: Event[]): Promise<ChatResponse> {
         try {
@@ -29,7 +39,10 @@ export class ChatService {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message }),
+                body: JSON.stringify({
+                    message,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                }),
             });
 
             if (!response.ok) {
@@ -38,53 +51,16 @@ export class ChatService {
 
             const data: AIResponse = await response.json();
 
-            // Handle any calendar actions
-            if (data.action) {
-                switch (data.action.type) {
-                    case 'create':
-                        if (data.action.title && data.action.start && data.action.end) {
-                            await api.createEvent({
-                                title: data.action.title,
-                                description: data.action.description || '',
-                                start: new Date(data.action.start),
-                                end: new Date(data.action.end),
-                                color: 'var(--tokyo-purple)'
-                            });
-                        }
-                        break;
-
-                    case 'update':
-                        if (data.action.event_id) {
-                            const event = events.find(e => e.id === data.action.event_id);
-                            if (event) {
-                                await api.updateEvent({
-                                    ...event,
-                                    title: data.action.title || event.title,
-                                    description: data.action.description || event.description,
-                                    start: data.action.start ? new Date(data.action.start) : event.start,
-                                    end: data.action.end ? new Date(data.action.end) : event.end,
-                                });
-                            }
-                        }
-                        break;
-
-                    case 'delete':
-                        if (data.action.event_id) {
-                            await api.deleteEvent(data.action.event_id);
-                        }
-                        break;
-                }
-            }
-
+            // Just return the response and let the frontend handle the actions
             return {
                 text: data.message,
-                action: data.action?.type,
+                action: data.action ? mapActionType(data.action.type) : undefined,
                 success: true,
             };
         } catch (error) {
             console.error('Error processing message:', error);
             return {
-                text: "Gomen ne, something went wrong while processing your message. Could you try again?",
+                text: "Something went wrong while processing your message. Could you try again?",
                 success: false,
             };
         }

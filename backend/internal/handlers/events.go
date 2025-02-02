@@ -3,6 +3,7 @@ package handlers
 import (
 	"calendar-backend/internal/models"
 	"calendar-backend/internal/repository"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -16,6 +17,7 @@ func GetEvents(c *fiber.Ctx) error {
 			"error": "Failed to fetch events",
 		})
 	}
+	log.Printf("Fetched %d events", len(events))
 	return c.JSON(events)
 }
 

@@ -7,7 +7,8 @@ import (
 )
 
 type ChatRequest struct {
-	Message string `json:"message"`
+	Message  string `json:"message"`
+	Timezone string `json:"timezone"`
 }
 
 type ChatResponse struct {
@@ -23,8 +24,8 @@ func HandleChat(c *fiber.Ctx) error {
 		})
 	}
 
-	// Query AI with user's message
-	message, action, err := ai.QueryOllama(req.Message)
+	// Query AI with user's message and timezone
+	message, action, err := ai.QueryOllama(req.Message, req.Timezone)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),

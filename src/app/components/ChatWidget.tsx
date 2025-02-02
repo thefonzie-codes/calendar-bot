@@ -19,7 +19,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, events, onEvents
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
-            text: "Hey boss! I'm your AI calendar assistant. Need help managing your schedule?",
+            text: "Hi, I'm your AI calendar assistant. Need help managing your schedule?",
             sender: 'ai',
             timestamp: new Date()
         }
@@ -112,7 +112,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, events, onEvents
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
-                        placeholder="What can I help you with today, boss?"
+                        placeholder="What can I help you with today?"
                         disabled={isProcessing}
                         className="flex-1 p-2 rounded bg-[var(--tokyo-bg)] text-[var(--tokyo-fg)] 
                                  border border-[var(--tokyo-border)] focus:outline-none 
