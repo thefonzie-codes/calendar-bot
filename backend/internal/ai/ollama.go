@@ -16,6 +16,16 @@ import (
 	"github.com/google/uuid"
 )
 
+// AIProvider interface defines methods that any AI provider must implement
+type AIProvider interface {
+	Query(prompt string, timezone string) (string, *CalendarAction, error)
+}
+
+type OllamaProvider struct {
+	BaseURL string
+	Model   string
+}
+
 type OllamaRequest struct {
 	Model  string `json:"model"`
 	Prompt string `json:"prompt"`
@@ -43,7 +53,14 @@ type AIResponse struct {
 	Action  *CalendarAction `json:"action"`  // Optional calendar action
 }
 
-const systemPrompt = `You are a helpful calendar assistant. You can help users manage their schedule, 
+type EventInfo struct {
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Start       time.Time `json:"start"`
+	End         time.Time `json:"end"`
+}
+
+const BaseSystemPrompt = `You are a helpful calendar assistant. You can help users manage their schedule, 
 create events, and provide suggestions about time management. Please provide concise and practical responses.
 
 Once you create the events, ask the user if it is correct. If it is not, ask the user for the changes they would like to make.
@@ -95,13 +112,6 @@ When modifying the calendar:
 
 Current Schedule:
 {{.Schedule}}`
-
-type EventInfo struct {
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Start       time.Time `json:"start"`
-	End         time.Time `json:"end"`
-}
 
 func GetFormattedSchedule() (string, error) {
 	var events []EventInfo
@@ -181,20 +191,25 @@ func executeCalendarAction(action *CalendarAction) error {
 	}
 }
 
-func QueryOllama(prompt string, timezone string) (string, *CalendarAction, error) {
-	url := "http://127.0.0.1:11434/api/generate"
+func NewOllamaProvider(baseURL string, model string) *OllamaProvider {
+	return &OllamaProvider{
+		BaseURL: baseURL,
+		Model:   model,
+	}
+}
 
+func (p *OllamaProvider) Query(prompt string, timezone string) (string, *CalendarAction, error) {
 	schedule, err := GetFormattedSchedule()
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to get schedule: %v", err)
 	}
 
-	currentSystemPrompt := strings.Replace(systemPrompt, "{{.Schedule}}", schedule, 1)
+	currentSystemPrompt := strings.Replace(BaseSystemPrompt, "{{.Schedule}}", schedule, 1)
 	currentSystemPrompt = strings.Replace(currentSystemPrompt, "{{.CurrentDate}}", time.Now().Format("2006-01-02"), 1)
 	currentSystemPrompt = strings.Replace(currentSystemPrompt, "{{.TimeZone}}", timezone, 1)
 
 	request := OllamaRequest{
-		Model:  "deepseek-r1:8b",
+		Model:  p.Model,
 		Prompt: prompt,
 		System: currentSystemPrompt,
 		Stream: true,
@@ -205,7 +220,7 @@ func QueryOllama(prompt string, timezone string) (string, *CalendarAction, error
 		return "", nil, fmt.Errorf("failed to marshal request: %v", err)
 	}
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(p.BaseURL+"/api/generate", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to make request to Ollama: %v", err)
 	}

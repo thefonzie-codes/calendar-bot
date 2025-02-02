@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"calendar-backend/internal/ai"
+	"log"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -16,6 +18,32 @@ type ChatResponse struct {
 	Action  *ai.CalendarAction `json:"action,omitempty"`
 }
 
+var (
+	aiProvider ai.AIProvider
+)
+
+func InitAIProvider() {
+	// Check if OpenAI API key is set
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	log.Printf("🔑 OpenAI API Key present: %v", apiKey != "")
+
+	if apiKey != "" {
+		log.Println("🤖 Using OpenAI Provider")
+		aiProvider = ai.NewOpenAIProvider(
+			"https://api.openai.com",
+			"gpt-3.5-turbo",
+			apiKey,
+		)
+	} else {
+		log.Println("🤖 Falling back to Ollama Provider")
+		// Fallback to Ollama
+		aiProvider = ai.NewOllamaProvider(
+			"http://127.0.0.1:11434",
+			"deepseek-r1:8b",
+		)
+	}
+}
+
 func HandleChat(c *fiber.Ctx) error {
 	var req ChatRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -25,7 +53,7 @@ func HandleChat(c *fiber.Ctx) error {
 	}
 
 	// Query AI with user's message and timezone
-	message, action, err := ai.QueryOllama(req.Message, req.Timezone)
+	message, action, err := aiProvider.Query(req.Message, req.Timezone)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),

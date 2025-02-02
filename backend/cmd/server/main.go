@@ -12,9 +12,16 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Printf("⚠️ Warning: Could not load .env file: %v", err)
+	}
+	log.Println("✨ Environment variables loaded")
+
 	// Make log messages more visible
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Llongfile)
 	log.SetOutput(os.Stdout) // Explicitly set output to stdout
@@ -25,6 +32,10 @@ func main() {
 		log.Fatalf("❌ Failed to initialize database: %v", err)
 	}
 	log.Println("✅ Database initialized successfully")
+
+	// Initialize AI provider
+	handlers.InitAIProvider()
+	log.Println("✅ AI provider initialized successfully")
 
 	// Create Fiber app with custom config
 	app := fiber.New(fiber.Config{
