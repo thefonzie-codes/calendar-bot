@@ -26,8 +26,9 @@ func InitAIProvider() {
 	// Check if OpenAI API key is set
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	log.Printf("🔑 OpenAI API Key present: %v", apiKey != "")
+	log.Printf("🔑 OpenAI API Key length: %d", len(apiKey))
 
-	if apiKey != "" {
+	if apiKey != "" && apiKey != "your_api_key_here" {
 		log.Println("🤖 Using OpenAI Provider")
 		aiProvider = ai.NewOpenAIProvider(
 			"https://api.openai.com",
@@ -35,7 +36,7 @@ func InitAIProvider() {
 			apiKey,
 		)
 	} else {
-		log.Println("🤖 Falling back to Ollama Provider")
+		log.Printf("🤖 Falling back to Ollama Provider (API Key empty or not set: %v)", apiKey == "")
 		// Fallback to Ollama
 		aiProvider = ai.NewOllamaProvider(
 			"http://127.0.0.1:11434",

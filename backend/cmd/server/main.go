@@ -16,15 +16,14 @@ import (
 )
 
 func main() {
-	// Load .env file
+	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
-		log.Printf("⚠️ Warning: Could not load .env file: %v", err)
+		log.Println("No .env file found, using system environment variables")
 	}
-	log.Println("✨ Environment variables loaded")
 
 	// Make log messages more visible
-	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Llongfile)
-	log.SetOutput(os.Stdout) // Explicitly set output to stdout
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	log.SetOutput(os.Stdout)
 	log.Println("🚀 Server initialization starting...")
 
 	// Initialize database
