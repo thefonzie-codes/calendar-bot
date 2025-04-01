@@ -54,7 +54,7 @@ The app will be available at `http://localhost:3000`
 ## TODO
 
 ### AI Chat Integration Plans
-1. [ ] Set up OpenAI API integration
+1. [x] Set up OpenAI API integration
 2. [ ] Fix delete functionality when using chat
 3. [ ] Allow chatbot to make multiple changes in one response
 
